@@ -269,8 +269,8 @@ This is a personal learning project, but feedback is welcome!
 
 **Tomasz Solis**
 - Email: tomasz.solis@gmail.com
-- LinkedIn: [linkedin.com/in/tomaszsolis](https://www.linkedin.com/in/tomaszsolis/)
-- GitHub: [github.com/tomasz-solis](https://github.com/tomasz-solis)
+- [LinkedIn](https://www.linkedin.com/in/tomaszsolis/)
+- [GitHub](https://github.com/tomasz-solis)
 
 ---
 
