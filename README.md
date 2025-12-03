@@ -7,15 +7,21 @@
 
 **Method:** Staggered Difference-in-Differences with two-way fixed effects  
 **Sample:** 71 tech IPOs (2018-2024)  
-**Data:** 17,874 daily stock price observations
+**Data:** 17,802 daily stock price observations
 
 ---
 
 ## Key Findings
 
-> **[To be filled after analysis]**
-> 
-> Stock prices [increase/decrease/show no change] by X% in the post-lockup period compared to pre-lockup, controlling for market conditions and company characteristics.
+**Main Result:** Stock prices **increase** by +0.45% (p=0.0004) following lockup expiration, contrary to conventional wisdom that predicts price declines from insider selling pressure.
+
+**Effect is heterogeneous:**
+- **Large IPOs:** +0.63% (p<0.001) - highly significant
+- **Small IPOs:** +0.12% (p=0.46) - not significant
+
+**Caveat:** Placebo tests reveal significant effects at fake lockup dates, suggesting the +0.45% may reflect general IPO drift rather than a lockup-specific causal effect.
+
+**Interpretation:** Markets efficiently price in anticipated lockup expiration. By Day 180, expected selling pressure is already reflected in prices. Alternatively, the positive effect may indicate survivorship bias—IPOs that reach Day 180 without imploding are stronger companies.
 
 ---
 
@@ -64,9 +70,9 @@ Standard errors clustered at company level.
 ### Identification Strategy
 
 **Within-company comparison:**
-- Compare same IPO's performance pre-lockup (Days 1-179) vs post-lockup (Days 181-365)
+- Compare same IPO's performance pre-lockup (Days 1-180) vs post-lockup (Days 181-365)
 - Control for calendar time (removes COVID, Fed policy, market-wide shocks)
-- Assumption: Parallel trends (tested via event study)
+- Assumption: Parallel trends (validated: p=0.43 for pre-trend test)
 
 ---
 
@@ -75,32 +81,28 @@ Standard errors clustered at company level.
 ipo-lockup-did-analysis/
 ├── README.md
 ├── requirements.txt
-├── setup_structure.sh
 │
 ├── data/
 │   ├── raw/                    # Original data (gitignored)
 │   └── processed/              # Cleaned datasets
 │       ├── tech_ipos_curated.csv
-│       ├── stock_prices_ipo.csv
 │       └── stock_prices_ipo_adjusted.csv
 │
 ├── notebooks/
 │   ├── 01_data_collection.ipynb      # IPO list + stock downloads
 │   ├── 02_did_analysis.ipynb         # Main DiD analysis
-│   └── 03_robustness_checks.ipynb    # Sensitivity tests
-│
-├── src/
-│   ├── __init__.py
-│   ├── data_utils.py           # Data loading & preprocessing
-│   ├── did_analysis.py         # DiD estimation functions
-│   └── visualization.py        # Plotting utilities
+│   └── 03_robustness.ipynb           # Sensitivity tests
 │
 └── outputs/
-    ├── figures/                # Publication-ready charts
-    │   ├── event_study.html
-    │   └── treatment_timing.html
-    └── results/                # Regression tables
-        └── did_results.csv
+    ├── figures/                # Charts
+    │   ├── 02_event_study.png
+    │   ├── 03_treatment_effects_time_windows.png
+    │   ├── 04_treatment_effects_company_size.png
+    │   └── 05_placebo_tests.png
+    └── results/                # Results tables
+        ├── did_main_results.csv
+        ├── event_study_results.csv
+        └── robustness_results.csv
 ```
 
 ---
@@ -109,15 +111,15 @@ ipo-lockup-did-analysis/
 
 ### 1. Clone Repository
 ```bash
-git clone https://github.com/YOUR_USERNAME/ipo-lockup-did-analysis.git
+git clone <repo-url>
 cd ipo-lockup-did-analysis
 ```
 
 ### 2. Install Dependencies
 ```bash
-# Create virtual environment (optional but recommended)
+# Create virtual environment
 python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate  # Windows: venv\Scripts\activate
 
 # Install packages
 pip install -r requirements.txt
@@ -131,7 +133,7 @@ jupyter notebook
 # Run notebooks in order:
 # 1. notebooks/01_data_collection.ipynb
 # 2. notebooks/02_did_analysis.ipynb
-# 3. notebooks/03_robustness_checks.ipynb
+# 3. notebooks/03_robustness.ipynb
 ```
 
 ---
@@ -148,7 +150,7 @@ jupyter notebook
 - Publicly traded (stock price data available)
 - 180-day standard lockup period
 
-**Final sample:** 71 IPOs with complete data
+**Final sample:** 71 IPOs
 
 **Distribution by year:**
 - 2018: 14 IPOs
@@ -163,105 +165,198 @@ jupyter notebook
 
 **Window:** IPO date to IPO date + 365 days
 
-**Observations:** 17,874 daily price points
+**Observations:** 17,802 daily price points
 
 **Market adjustment:** All returns calculated as abnormal returns vs S&P 500 (SPY)
 
 ---
 
-## Key Results
+## Results
 
 ### Main Specification
 
-**[To be filled after analysis]**
 ```
-Treatment Effect (β₁): X.XX%
-Standard Error: X.XX%
-95% CI: [X.XX%, X.XX%]
-P-value: 0.XXX
+Treatment Effect (β₁): +0.4545%
+Standard Error: 0.1289%
+95% CI: [+0.2018%, +0.7072%]
+P-value: 0.0004
 
-Interpretation: Stock prices [increase/decrease] by X.XX% 
-in the post-lockup period, on average.
+Interpretation: Stock prices increase by 0.45% in the post-lockup 
+period compared to pre-lockup, after controlling for market conditions 
+and company characteristics.
 ```
+
+**Statistical significance:** Yes (p<0.001)  
+**Economic significance:** Marginal (0.45% vs 4.5% daily volatility)
+
+### Parallel Trends Validation
+
+![Parallel Trends](outputs/figures/01_rdd_estimate_vs_true_effect.png)
+
+**Pre-trend test:** Slope = -0.006% per day, p=0.430  
+**Result:** ✓ Pass - No significant pre-trend detected
+
+Pre-lockup period (Days -30 to -1) shows flat pattern, validating parallel trends assumption.
 
 ### Event Study
 
-**Visual evidence of treatment effect timing:**
+![Event Study](outputs/figures/02_event_study.png)
 
-![Event Study Plot](outputs/figures/event_study.html)
+Day-by-day pattern around lockup expiration shows:
+- Pre-period: Bounces around zero (noisy but flat)
+- Day 0 (lockup): No sharp discontinuity
+- Post-period: Slight upward drift
 
-**Parallel trends:** [Pass/Fail] - Pre-lockup coefficients show [parallel/non-parallel] trends.
+Pattern suggests gradual effect rather than discrete jump at expiration.
 
 ---
 
 ## Robustness Checks
 
-- [ ] **Different time windows:** 30-day, 60-day, 90-day post-lockup
-- [ ] **Exclude outliers:** Drop IPOs with >100% price change
-- [ ] **Sector heterogeneity:** Separate effects for fintech vs cloud vs e-commerce
-- [ ] **IPO quality:** Large vs small offerings
-- [ ] **Time period:** Pre-COVID (2018-2019) vs COVID (2020-2021) vs post-COVID (2022-2024)
+### 1. Different Time Windows
+
+![Treatment Effects by Window](outputs/figures/03_treatment_effects_time_windows.png)
+
+| Lockup Day | Effect | P-value | Significant |
+|-----------|--------|---------|------------|
+| Day 90    | -0.23% | 0.030   | Yes        |
+| Day 150   | +0.33% | 0.009   | Yes        |
+| **Day 180** | **+0.45%** | **0.0004** | **Yes** |
+| Day 210   | +0.38% | 0.002   | Yes        |
+| Day 270   | +0.10% | 0.445   | No         |
+
+**Interpretation:** Effect concentrated around Days 150-210, peaks at Day 180 (real lockup). Negative at Day 90 (too early), fades by Day 270 (too late).
+
+### 2. Company Size Heterogeneity
+
+![Treatment Effects by Size](outputs/figures/04_treatment_effects_company_size.png)
+
+| Group | Effect | P-value | Significant |
+|-------|--------|---------|------------|
+| **Large IPOs** | **+0.63%** | **<0.001** | **Yes** |
+| Small IPOs | +0.12% | 0.457 | No |
+
+**Key finding:** Effect driven entirely by large IPOs. Small IPOs show no lockup effect.
+
+**Why?** Large IPOs have:
+- More analyst coverage (better price discovery)
+- Higher liquidity (more efficient markets)
+- Institutional ownership (sophisticated investors)
+
+### 3. Placebo Tests
+
+![Placebo Tests](outputs/figures/05_placebo_tests.png)
+
+| Day | Effect | P-value | Significant |
+|-----|--------|---------|------------|
+| Day 60  | -0.41% | 0.001   | Yes        |
+| Day 90  | -0.23% | 0.030   | Yes        |
+| Day 120 | +0.01% | 0.930   | No         |
+| **Day 180** | **+0.45%** | **0.0004** | **Yes** |
+| Day 240 | +0.24% | 0.029   | Yes        |
+| Day 270 | +0.10% | 0.445   | No         |
+| Day 300 | -0.10% | 0.345   | No         |
+
+**Problem:** Multiple fake dates show significant effects (Days 60, 90, 240).
+
+**Interpretation:** 
+- ✗ If lockup were truly causal, only Day 180 should be significant
+- Pattern suggests general IPO lifecycle (early underperformance, mid-period recovery) rather than lockup-specific effect
+- Cannot conclusively separate lockup effect from IPO drift
 
 ---
 
-## Investment Implications
+## Discussion
 
-**[To be filled based on results]**
+### Main Finding: Prices Increase, Not Decrease
 
-**If negative effect found:**
-> Investors may benefit from selling IPO shares before Day 180 or waiting to buy until after lockup-induced selling pressure subsides.
+The +0.45% positive effect contradicts conventional wisdom that lockups "tank prices." Three possible explanations:
 
-**If no effect found:**
-> Market efficiently prices lockup risk. Lockup expiration is a non-event for diversified investors.
+**1. Efficient Markets Hypothesis**
+- Lockup expiration is public information (disclosed in prospectus)
+- Rational investors price in anticipated selling pressure beforehand
+- By Day 180, lockup is already priced in → no negative shock
 
-**If heterogeneous effects:**
-> Effect depends on [company quality / sector / market conditions]. Strategy should be conditional.
+**2. Survivorship Bias**
+- Weak IPOs often crash or delist before Day 180
+- Reaching Day 180 without imploding = positive signal
+- Survivors are higher-quality companies → positive drift
+
+**3. Limited Insider Selling**
+- Despite lockup expiration, insiders may not sell aggressively
+- Founders/VCs have long-term horizons
+- Actual selling volume may be lower than feared
+
+### Heterogeneity: Large vs Small IPOs
+
+Effect concentrated in large IPOs (+0.63%) suggests market efficiency matters:
+- Large IPOs: High liquidity, analyst coverage, institutional ownership → efficient pricing
+- Small IPOs: Thin trading, less coverage → prices don't adjust as smoothly
+
+### Methodological Limitation: Placebo Tests
+
+The presence of significant effects at fake lockup dates (Days 60, 90, 240) is concerning. This pattern suggests:
+
+**Alternative explanation:** The +0.45% "effect" may not be lockup-specific, but rather reflects:
+- General IPO lifecycle (negative early, positive mid-period, stable late)
+- Gradual upward drift for surviving companies
+- The model picking up this drift, not a discrete lockup effect
+
+**Cannot definitively rule out:** That the +0.45% is partly or entirely spurious.
+
+### Investment Implications
+
+**If effect is real (+0.45% lockup-specific):**
+- Contrary to selling before lockup, investors might slightly benefit from holding through expiration
+- However, effect is tiny (0.45% vs 4.5% daily volatility) → not tradeable after transaction costs
+
+**If effect is IPO drift (more likely given placebos):**
+- Lockup expiration is a non-event for stock prices
+- Focus investment strategy on company fundamentals, not lockup timing
+
+**Practical takeaway:** Markets are reasonably efficient. Lockup risk is priced in. Don't overthink lockup timing.
 
 ---
 
 ## Methodological Notes
 
-### Advantages of Staggered DiD
+### Advantages of This Approach
 
-1. **Controls for macro shocks:** Time fixed effects absorb COVID, Fed policy, market sentiment
-2. **Controls for selection:** Company fixed effects remove time-invariant quality differences
-3. **Uses all data:** Leverages treatment timing variation (generalizable across time periods)
-4. **Testable assumptions:** Parallel trends can be visually and statistically tested
+1. **Controls for macro shocks:** Time FE absorb COVID, Fed policy, market sentiment
+2. **Controls for selection:** Company FE remove time-invariant quality differences
+3. **Uses all data:** Leverages treatment timing variation across 71 IPOs
+4. **Testable assumptions:** Parallel trends validated (p=0.43)
 
 ### Limitations
 
-1. **Lockup variation:** Analysis assumes 180-day lockup for all (some have 90 or 365 days—excluded)
-2. **Insider selling data:** We observe price effects, not actual selling volume
-3. **Anticipation effects:** Markets may price in lockup before Day 180 (addressed via event study)
-4. **External validity:** Results apply to tech IPOs 2018-2024; may not generalize to other sectors/periods
+1. **Placebo tests raise concerns:** Multiple fake dates show effects → causality unclear
+2. **Cannot observe selling volume:** See price effects, not actual insider transactions
+3. **Small economic magnitude:** 0.45% barely exceeds transaction costs (0.1-0.2%)
+4. **Tech IPOs only:** Results may not generalize to other sectors
+5. **2018-2024 period:** Includes unusual market conditions (COVID, tech boom/bust)
+
+### What I Learned
+
+**Technical skills:**
+- Pivoting from RDD to DiD when initial method violated assumptions
+- Implementing staggered DiD with two-way fixed effects
+- Validating parallel trends assumptions
+- Running sensitivity analyses (windows, heterogeneity, placebos)
+
+**Analytical judgment:**
+- Recognizing when placebo tests indicate problems with causal interpretation
+- Balancing statistical vs economic significance
+- Importance of honest reporting when results are ambiguous
+
+**Key insight:** Good causal inference requires intellectual honesty. When robustness checks reveal problems (placebos), acknowledge them rather than overstating results.
 
 ---
 
 ## References
 
 **Primary learning resources:**
-- *Causal Inference: The Mixtape* by Scott Cunningham (main textbook)
+- *Causal Inference: The Mixtape* by Scott Cunningham
 - *Causal Inference in Python* by Matheus Facure Alves
-
-### IPO Lockup Research
-
-- Field, L. C., & Hanka, G. (2001). The Expiration of IPO Share Lockups. *The Journal of Finance*.
-- Bradley, D. J., et al. (2001). The Quiet Period Goes Out with a Bang. *The Journal of Finance*.
-
----
-
-## Contributing
-
-This is a personal learning project, but feedback is welcome!
-
-**Found an issue?**
-- Open a GitHub issue
-- Suggest improvements via pull request
-
-**Want to extend the analysis?**
-- Try alternative DiD estimators (Callaway-Sant'Anna, Sun-Abraham)
-- Add trading volume as outcome
-- Analyze other sectors (biotech, cleantech)
 
 ---
 
@@ -287,13 +382,11 @@ This project is part of my causal inference learning journey:
 1. **RDD Analysis** - [Free Shipping Threshold Effects](https://github.com/tomasz-solis/rdd-free-shipping)
 2. **Simple DiD** - [Marketing Campaign Impact](https://github.com/tomasz-solis/marketing-campaign-causal-impact)
 3. **Staggered DiD** - *This project* (IPO Lockups)
-4. **SCM** - Upcoming (searching for appropriate single-unit treatment)
+4. **Synthetic Control** - Upcoming
 
-**Learning progression:** Simple methods → Complex applications → Methodological adaptation
-
-**Key skill demonstrated:** Recognizing when a method doesn't fit and pivoting appropriately (originally planned RDD, identified violations, switched to DiD).
+**Key skill demonstrated:** Methodological adaptation - originally planned RDD, identified violations (multiple discontinuities), successfully pivoted to staggered DiD. Honest reporting when robustness checks reveal limitations.
 
 ---
 
-**Last Updated:** 2025-12-01
-**Status:** Analysis in Progress 🚧
+**Last Updated:** 2024-12-02  
+**Status:** Complete ✓
