@@ -35,8 +35,6 @@ When tech companies go public, insiders (founders, employees, venture capitalist
 
 This project uses causal inference methods to rigorously test whether lockup expirations actually cause stock price changes.
 
----
-
 ## Methodology
 
 ### Why Staggered Difference-in-Differences?
@@ -67,14 +65,12 @@ Where:
 Standard errors clustered at company level.
 ```
 
-### Identification Strategy
+**Identification Strategy:**
 
 **Within-company comparison:**
 - Compare same IPO's performance pre-lockup (Days 1-180) vs post-lockup (Days 181-365)
 - Control for calendar time (removes COVID, Fed policy, market-wide shocks)
 - Assumption: Parallel trends (validated: p=0.43 for pre-trend test)
-
----
 
 ## Project Structure
 ```
@@ -136,8 +132,6 @@ jupyter notebook
 # 3. notebooks/03_robustness.ipynb
 ```
 
----
-
 ## Data
 
 ### IPO Sample
@@ -168,8 +162,6 @@ jupyter notebook
 **Observations:** 17,802 daily price points
 
 **Market adjustment:** All returns calculated as abnormal returns vs S&P 500 (SPY)
-
----
 
 ## Results
 
@@ -208,8 +200,6 @@ Day-by-day pattern around lockup expiration shows:
 - Post-period: Slight upward drift
 
 Pattern suggests gradual effect rather than discrete jump at expiration.
-
----
 
 ## Robustness Checks
 
@@ -264,8 +254,6 @@ Pattern suggests gradual effect rather than discrete jump at expiration.
 - Pattern suggests general IPO lifecycle (early underperformance, mid-period recovery) rather than lockup-specific effect
 - Cannot conclusively separate lockup effect from IPO drift
 
----
-
 ## Discussion
 
 ### Main Finding: Prices Increase, Not Decrease
@@ -316,8 +304,6 @@ The presence of significant effects at fake lockup dates (Days 60, 90, 240) is c
 
 **Practical takeaway:** Markets are reasonably efficient. Lockup risk is priced in. Don't overthink lockup timing.
 
----
-
 ## Methodological Notes
 
 ### Advantages of This Approach
@@ -350,15 +336,11 @@ The presence of significant effects at fake lockup dates (Days 60, 90, 240) is c
 
 **Key insight:** Good causal inference requires intellectual honesty. When robustness checks reveal problems (placebos), acknowledge them rather than overstating results.
 
----
-
 ## References
 
 **Primary learning resources:**
 - *Causal Inference: The Mixtape* by Scott Cunningham
 - *Causal Inference in Python* by Matheus Facure Alves
-
----
 
 ## Contact
 
@@ -367,13 +349,9 @@ The presence of significant effects at fake lockup dates (Days 60, 90, 240) is c
 - [LinkedIn](https://www.linkedin.com/in/tomaszsolis/)
 - [GitHub](https://github.com/tomasz-solis)
 
----
-
 ## License
 
 MIT License - feel free to use for learning/research with attribution.
-
----
 
 ## Portfolio Context
 
@@ -385,8 +363,6 @@ This project is part of my causal inference learning journey:
 4. **Synthetic Control** - Upcoming
 
 **Key skill demonstrated:** Methodological adaptation - originally planned RDD, identified violations (multiple discontinuities), successfully pivoted to staggered DiD. Honest reporting when robustness checks reveal limitations.
-
----
 
 **Last Updated:** 2024-12-02  
 **Status:** Complete ✓
