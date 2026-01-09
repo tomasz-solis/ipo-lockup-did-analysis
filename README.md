@@ -107,7 +107,7 @@ ipo-lockup-did-analysis/
 
 ### 1. Clone Repository
 ```bash
-git clone <repo-url>
+git clone https://github.com/tomasz-solis/ipo-lockup-did-analysis/
 cd ipo-lockup-did-analysis
 ```
 
@@ -361,8 +361,3 @@ This project is part of my causal inference learning journey:
 2. **Simple DiD** - [Marketing Campaign Impact](https://github.com/tomasz-solis/marketing-campaign-causal-impact)
 3. **Staggered DiD** - *This project* (IPO Lockups)
 4. **Synthetic Control** - Upcoming
-
-**Key skill demonstrated:** Methodological adaptation - originally planned RDD, identified violations (multiple discontinuities), successfully pivoted to staggered DiD. Honest reporting when robustness checks reveal limitations.
-
-**Last Updated:** 2024-12-02  
-**Status:** Complete ✓
