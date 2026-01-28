@@ -1,0 +1,48 @@
+# Development Notes
+
+Just random things I learned building this:
+
+## Data Issues
+- yfinance sometimes returns weird data (missing dates, duplicates)
+- Had to add `.drop_duplicates()` everywhere
+- Market adjustment is critical - otherwise COVID crash dominates everything
+
+## Estimation
+- First tried WLS with volume weights - totally unstable, made large IPOs dominate
+- Unweighted TWFE more robust
+- Clustered SEs matter - regular SEs way too optimistic
+- Got AbsorbingEffectError until I added `drop_absorbed=True` to event study
+
+## Things that didn't work
+- Volume-weighted DiD - Large IPOs dominated, results unstable (see scratch notebook)
+- Fama-MacBeth standard errors - way too conservative, killed significance
+- Quantile regression - didn't add much insight beyond OLS
+- Using first day for company characteristics - way too noisy (200%+ vol)
+- Tried sentiment analysis from news - couldn't get good API access (paywall)
+- Sector heterogeneity - too few IPOs per sector, time FE ate all degrees of freedom
+- SEC Form 4 scraping - possible but would take days to build parser, gave up
+
+## Code quality
+- Added error handling after getting burned by missing data (PWSC, BIGC delisted)
+- Should probably add more validation but good enough for now
+- Tests are incomplete (see TODOs in test_estimators.py) - maybe 40% coverage?
+- Some functions could use refactoring but shipping > perfection
+
+## Debugging tricks
+- `drop_absorbed=True` in event study fixed AbsorbingEffectError
+- Clustered SEs syntax is non-obvious in linearmodels (cluster_entity=True not cluster='entity')
+- yfinance multi-index columns are annoying, always flatten immediately
+- Had duplicate ticker-date pairs at one point (fixed by checking for dupes)
+
+## Performance
+- TWFE with time FE is SLOW (30-60 sec for 17k obs)
+- Tried caching results but not worth the complexity
+- Event study even slower (creates tons of dummies)
+- Just accept it or use --quick flag
+
+## Next time
+- Pull market cap from SEC filings instead of proxying with price*volume
+- Maybe try matching estimator for heterogeneity analysis
+- Volume analysis could be interesting (did insiders actually sell?)
+- Collect non-tech sectors (need more manual curation - ugh)
+- Look into paid APIs for insider trading data (Quiver? ~$200/mo)
