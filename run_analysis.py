@@ -53,9 +53,9 @@ def main():
 
     if twfe_result.is_significant():
         direction = "increase" if twfe_result.coefficient > 0 else "decrease"
-        print(f"\n✓ Statistically significant {direction}")
+        print(f"\nOK Statistically significant {direction}")
     else:
-        print(f"\n✗ Not statistically significant")
+        print(f"\nFailed Not statistically significant")
 
     if args.quick:
         return
