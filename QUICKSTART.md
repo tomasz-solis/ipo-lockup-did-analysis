@@ -4,11 +4,11 @@ Run the analysis in 5 minutes.
 
 ## TL;DR
 
-**Finding**: IPO lockup expirations → +0.45% price increase (p<0.001), not the -1% to -3% crash from old studies.
+Finding: IPO lockup expirations → +0.45% price increase (p<0.001), not the -1% to -3% crash from old studies.
 
-**Problem**: Placebo tests fail. Effect probably reflects IPO lifecycle, not lockup causality.
+Problem: Placebo tests fail. Effect probably reflects IPO lifecycle, not lockup causality.
 
-**Implication**: Don't trade around lockup dates. Markets price this in months ahead.
+Implication: Don't trade around lockup dates. Markets price this in months ahead.
 
 ---
 
@@ -22,7 +22,7 @@ source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-**Requirements**: Python 3.10+, pandas, numpy, scipy, statsmodels, linearmodels, plotly, yfinance
+Requirements: Python 3.10+, pandas, numpy, scipy, statsmodels, linearmodels, plotly, yfinance
 
 ---
 
@@ -41,7 +41,7 @@ python run_analysis.py --quick
 python run_analysis.py --ticker SNOW
 ```
 
-**Output**:
+Output:
 ```
 Loading data...
 Loaded: 17,802 obs, 71 IPOs
@@ -54,7 +54,7 @@ Main Result:
   P-value:  0.0004
   95% CI:   [0.2019%, 0.7072%]
 
-✓ Statistically significant increase
+OK Statistically significant increase
 ```
 
 ### 2. Python One-liner
@@ -107,10 +107,10 @@ jupyter notebook
 ```
 
 Run in order:
-1. **01_data_collection.ipynb** - Data loading, market adjustment, descriptive stats
-2. **02_did_analysis.ipynb** - Main TWFE results, event study, parallel trends
-3. **03_robustness.ipynb** - Alternative windows, heterogeneity, placebo tests
-4. **04_advanced_analysis.ipynb** - Goodman-Bacon decomposition, modern methods
+1. 01_data_collection.ipynb - Data loading, market adjustment, descriptive stats
+2. 02_did_analysis.ipynb - Main TWFE results, event study, parallel trends
+3. 03_robustness.ipynb - Alternative windows, heterogeneity, placebo tests
+4. 04_advanced_analysis.ipynb - Goodman-Bacon decomposition, modern methods
 
 ---
 
@@ -120,13 +120,13 @@ Without running anything:
 
 | Finding | Value | Interpretation |
 |---------|-------|----------------|
-| **Main Effect** | +0.45% (p<0.001) | Contradicts "lockup crash" narrative |
-| **Economic Sig** | 10% of daily vol | Essentially noise for trading |
-| **Large IPOs** | +0.63% (p<0.001) | Liquid names show stronger effect |
-| **Small IPOs** | +0.12% (n.s.) | Too illiquid to detect |
-| **Placebo Tests** | 50% significant | **Identification problem** |
+| Main Effect | +0.45% (p<0.001) | Contradicts "lockup crash" narrative |
+| Economic Sig | 10% of daily vol | Essentially noise for trading |
+| Large IPOs | +0.63% (p<0.001) | Liquid names show stronger effect |
+| Small IPOs | +0.12% (n.s.) | Too illiquid to detect |
+| Placebo Tests | 50% significant | Identification problem |
 
-**Bottom line**: Effect exists but probably not causal. Markets efficient. Don't trade around lockups.
+Bottom line: Effect exists but probably not causal. Markets efficient. Don't trade around lockups.
 
 ---
 
@@ -136,7 +136,7 @@ Without running anything:
 
 If you see "Data file not found", you probably skipped running notebook 01. Data collection takes ~10min to download everything from yfinance, grab coffee while it runs.
 
-**Pro tip**: Use the CLI tool first (`python run_analysis.py --quick`) to make sure everything works before diving into notebooks.
+Pro tip: Use the CLI tool first (`python run_analysis.py --quick`) to make sure everything works before diving into notebooks.
 
 ### Import Errors
 
@@ -209,11 +209,11 @@ ipo-lockup-did-analysis/
 
 ## Next Steps
 
-1. **Read [README.md](README.md)** for full methodology and findings
-2. **Run notebooks** (01 → 04) for detailed analysis and visualizations
-3. **Check `notebooks/scratch/`** to see failed experiments (volume weighting, sector analysis, etc.)
-4. **Look at tests** to understand how estimators work
-5. **Extend analysis** (if you're interested):
+1. Read [README.md](README.md) for full methodology and findings
+2. Run notebooks (01 → 04) for detailed analysis and visualizations
+3. Check `notebooks/scratch/` to see failed experiments (volume weighting, sector analysis, etc.)
+4. Look at tests to understand how estimators work
+5. Extend analysis (if you're interested):
    - Add non-tech IPOs (would need to manually curate more data - tedious)
    - Scrape SEC Form 4 for actual insider selling (tried this, gave up - see scratch/)
    - Test if effect varies by VC backing
@@ -241,4 +241,4 @@ ipo-lockup-did-analysis/
 
 ## Contact
 
-**Questions?** See [README.md](README.md) or reach out via [LinkedIn](https://www.linkedin.com/in/tomaszsolis/).
+Questions? See [README.md](README.md) or reach out via [LinkedIn](https://www.linkedin.com/in/tomaszsolis/).

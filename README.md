@@ -1,350 +1,140 @@
-# IPO Lockup Expiration Effects: Staggered DiD Analysis
+# IPO Lockup Expiration Effects
 
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+This project tests whether IPO lockup expirations create abnormal stock-price
+pressure in modern tech IPOs. The common story is that insider selling around Day
+180 causes a predictable crash. The data here does not support that simple story.
 
----
+## Readout
 
-## Summary
+In a sample of 71 technology IPOs from 2018 to 2024, the estimated Day 180 effect is
+small and positive: about +0.45% abnormal return. That is statistically detectable
+in the baseline model, but economically small relative to daily volatility and
+transaction costs.
 
-**Question**: Do IPO lockup expirations crash stock prices?
+The stronger finding is a warning about identification. Placebo dates also show
+significant effects, which means the Day 180 estimate is probably picking up the IPO
+lifecycle rather than a clean lockup-specific shock.
 
-**Answer**: No. Analysis of 71 tech IPOs (2018-2024) finds prices *rise* +0.45% (p<0.001) when lockups expire on Day 180.
-
-**Why it matters**: If you're timing IPO trades around lockup dates, stop. Markets price this in months ahead. The "lockup crash" narrative from 1990s studies (Field & Hanka 2001: -1.5%) doesn't hold in modern data.
-
-**Caveat**: Placebo tests show significant effects at fake dates too, suggesting the pattern reflects general IPO lifecycle dynamics rather than discrete lockup-specific shocks. Requires deeper investigation.
-
----
-
-## Key Findings
-
-### Main Result
-- **TWFE DiD**: +0.45% abnormal return (SE: 0.13%, p<0.001)
-- **Economic magnitude**: 10% of daily volatility (~4.5%) - effectively noise
-- **Direction**: Contradicts conventional wisdom and academic literature from 1990s
-
-### Heterogeneity
-- **Large IPOs**: +0.63% (p<0.001) - liquid names with efficient price discovery
-- **Small IPOs**: +0.12% (p=0.46, n.s.) - too illiquid to detect effects
-- Effect concentrated in large-cap, high-volume IPOs
-
-### Identification Problem
-- 50% of placebo lockup dates (Days 60, 90, 120, etc.) show significant effects
-- Suggests estimated effect captures general IPO trajectory, not lockup-specific shock
-- Alternative explanation: Survivorship (making it to Day 180 = positive signal)
-- **This is an identification failure**, not a clean causal estimate
-
----
-
-## So What? (Business Implications)
-
-### For Traders
-**Don't bother timing lockup expirations**. The effect is:
-- Tiny (0.45% vs 4.5% daily noise)
-- Already priced in
-- Opposite direction from what people expect
-- Smaller than typical bid-ask spread + commissions
-
-### For Portfolio Managers
-- Lockup calendars aren't a source of alpha
-- IPOs reaching Day 180 are survivors (weak ones crashed or delisted already)
-- Positive selection effect dominates any insider selling pressure
-- Focus on fundamentals, not calendar games
-
-### Why This Contradicts Old Studies
-Academic papers from 1990s-2000s found -1% to -3% lockup effects:
-- **Field & Hanka (2001)**: -1.5% on expiration day
-- **Brav & Gompers (2003)**: Volume spikes but minimal price impact
-
-**Possible explanations for +0.45% vs -1.5%**:
-1. **Market efficiency improved** - Lockup dates in prospectus, easily priced in now
-2. **Sample differences** - Tech IPOs 2020s vs broad 1990s sample
-3. **Time period** - QE era (2018-2021) created different dynamics
-4. **Survivorship** - My sample only includes IPOs that *made it* to Day 180
-
-Still figuring out the best way to explain the placebo test failures - might just be general lifecycle effects rather than lockup-specific.
-
-### What I'd Do Next (If I Had More Time/Data/Money)
-1. Extend to all sectors - tech might be special (need healthcare, industrials, etc.)
-2. Scrape SEC Form 4 for actual insider selling data (tried this, gave up - APIs are expensive)
-3. Test if effect varies by VC backing (strong vs weak VCs)
-4. Compare to other "scheduled" events (option expirations, earnings)
-5. Time-varying analysis: Did effect change post-COVID? Post-rate-hikes?
-
----
-
-## Methodology
-
-### Identification Strategy
-
-Standard two-way fixed effects (TWFE) difference-in-differences:
-
-```
-Y_it = β₁·Post_it + α_i + γ_t + ε_it
-```
-
-- `Y_it`: Market-adjusted return for IPO i at date t
-- `Post_it`: Indicator for Days_Since_IPO > 180
-- `α_i`: Company fixed effects (controls for firm quality)
-- `γ_t`: Date fixed effects (controls for macro shocks - Fed, COVID, etc.)
-- `β₁`: Treatment effect (what we estimate)
-- Standard errors: Clustered by company (accounts for serial correlation)
-
-### Why Modern Methods Matter
-
-Classic TWFE can be biased in staggered settings when treatment effects are heterogeneous (Goodman-Bacon 2021). IPOs hit Day 180 at different calendar times, so I also implement:
-
-1. **Goodman-Bacon decomposition** - Shows TWFE uses some already-treated units as controls ("forbidden comparisons")
-2. **Callaway-Sant'Anna** - Avoids problematic comparisons, provides robust estimate
-
-**Note**: C-S not fully applicable here since all IPOs eventually get treated (no never-treated control group). Results should be interpreted as descriptive/predictive rather than strictly causal.
-
-### Parallel Trends
-- **Test**: Linear pre-trend from Days -30 to -1
-- **Result**: Slope = -0.011% per day (p=0.43)
-- **Conclusion**: No significant pre-trend detected
-
-But placebo tests suggest parallel trends might not hold globally across the full IPO lifecycle.
-
----
+My interpretation: lockup calendars are not a reliable standalone trading signal in
+this sample. The evidence is more consistent with gradual market repricing and
+survivorship than with a discrete lockup crash.
 
 ## Data
 
-**Source**: Yahoo Finance (yfinance API)
-
-**Sample**:
-- 71 technology IPOs (cloud, fintech, e-commerce, SaaS)
-- IPO dates: 2018-01-01 to 2024-06-30
+- 71 technology IPOs
+- IPO dates from 2018-01-01 to 2024-06-30
 - 17,802 daily observations
-- Time window: IPO date through IPO + 365 days
-- 82% of initial 87 (16 dropped due to delisting, acquisition, or missing data)
+- daily return window from IPO date to IPO + 365 days
+- market adjustment against SPY
+- source: Yahoo Finance via `yfinance`
 
-**Variables**:
+The initial curated list has 87 IPOs. Sixteen drop because of delisting, acquisition,
+or missing price history.
+
+## Method
+
+The baseline model is a two-way fixed-effects DiD:
+
+```text
+abnormal_return_it = beta * post_lockup_it
+                   + company_fixed_effect_i
+                   + date_fixed_effect_t
+                   + error_it
 ```
-Abnormal_Return = Stock_Return - SPY_Return
-Post_Lockup = 1 if Days_Since_IPO > 180
-```
 
-Market adjustment using S&P 500 removes macro shocks (COVID crash, Fed policy, tech selloff).
+Standard errors are clustered by company. I also run an event-study version and a
+Callaway-Sant'Anna estimator as a comparison.
 
-**Descriptive stats**:
-
-| Variable | Mean | SD | Min | Max |
-|----------|------|-----|-----|-----|
-| Abnormal Return (%) | 0.03 | 4.48 | -47.5 | 75.8 |
-| Days Since IPO | 182.5 | 105.2 | 0 | 365 |
-| Post-Lockup (%) | 51% | - | - | - |
-
----
+The modern DiD checks matter because IPOs reach Day 180 on different calendar dates.
+Classic TWFE can use already-treated units as controls when treatment timing is
+staggered. That is not just a technical detail; it affects how much causal language
+the result can carry.
 
 ## Results
 
-### Baseline Estimates
-
-| Estimator | Effect | SE | P-value | 95% CI |
-|-----------|--------|-----|---------|--------|
+| Estimator | Effect | SE | p-value | 95% CI |
+|---|---:|---:|---:|---|
 | TWFE DiD | +0.45% | 0.13% | 0.0004 | [0.20%, 0.71%] |
-| Event Study (Day 0) | +0.42% | 0.19% | 0.025 | [0.05%, 0.79%] |
+| Event study | +0.42% | 0.19% | 0.025 | [0.05%, 0.79%] |
 | Callaway-Sant'Anna | +0.43% | 0.15% | 0.003 | [0.15%, 0.72%] |
 
-Consistent across methods. Magnitude stable.
+The estimates line up, but the effect is tiny: roughly one-tenth of average daily
+abnormal-return volatility in this sample.
 
-### By Company Size (Market Cap Proxy)
+By size:
 
-| Size | Effect | SE | P-value |
-|------|--------|----|---------|
-| Large | +0.63% | 0.15% | <0.001 *** |
-| Medium | +0.31% | 0.15% | 0.042 ** |
-| Small | +0.12% | 0.16% | 0.457 |
+| Segment | Effect | p-value |
+|---|---:|---:|
+| Large IPOs | +0.63% | <0.001 |
+| Medium IPOs | +0.31% | 0.042 |
+| Small IPOs | +0.12% | 0.457 |
 
-Effect concentrates in liquid, high-volume IPOs with efficient price discovery.
+The signal is concentrated in larger, more liquid names. That is not what I would
+expect if the dominant mechanism were forced insider selling pressure.
 
-### By Market Regime
+## Identification Problem
 
-| Period | Effect | SE | P-value |
-|--------|--------|----|---------|
-| Bull (2018-2019) | +0.52% | 0.19% | 0.008 *** |
-| COVID (2020-2021) | +0.38% | 0.16% | 0.021 ** |
-| Bear (2022-2024) | +0.29% | 0.22% | 0.187 |
+The placebo tests are the most important part of the project.
 
-Weaker effects in bear markets (prices already depressed).
+Fake lockup dates at Days 60, 90, 120, 240, 270, and 300 produce significant effects
+in 3 of 6 cases. Day 180 is therefore not uniquely special.
 
-### Placebo Tests (PROBLEM)
+Plausible explanations:
 
-Tested effects at fake lockup dates (60, 90, 120, 240, 270, 300):
-- **3 out of 6** show significant effects (p<0.05)
-- Day 120: +0.33% (p=0.009)
-- Day 240: +0.38% (p=0.002)
+- IPO returns follow a lifecycle pattern over the first year
+- companies that survive to Day 180 are selected on quality
+- lockup information is already public and priced in before expiration
+- market regime and liquidity dominate any mechanical selling pressure
 
-**Interpretation**: Effect at Day 180 is not uniquely special. Suggests:
-1. U-shaped IPO return trajectory (early pop, mid-sag, late recovery)
-2. Survivorship (weak IPOs fail before Day 180)
-3. Gradual information incorporation over first year
+Because of that, I would not call the baseline estimate a clean causal effect.
 
-**Bottom line**: Causal interpretation is weak. More likely picking up general lifecycle pattern.
+## Trading Implication
 
----
+I would not trade this as a simple short-the-lockup rule. In this sample:
 
-## Limitations
+- the sign is opposite the old crash narrative
+- the magnitude is small
+- placebo dates weaken the causal story
+- transaction costs and spread can exceed the estimated effect
 
-1. **Identification**: Placebo tests fail. Effect may not be causal.
-2. **Mechanism unobserved**: No insider selling volume data (need SEC Form 4 scraping)
-3. **Economic significance**: 0.45% < transaction costs for retail traders
-4. **Sample**: Tech only. May not generalize to other sectors.
-5. **Period**: 2018-2024 includes unusual market conditions (COVID, QE, rate hikes, tech bubble)
-6. **Survivorship**: Only IPOs that made it to Day 180 included (biases results upward)
+A better next step would be to bring in actual insider-sale data from Form 4 filings,
+then test whether large observed selling events move prices differently from quiet
+lockup expirations.
 
----
-
-## Project Structure
-
-```
-ipo-lockup-did-analysis/
-├── README.md
-├── QUICKSTART.md
-├── requirements.txt
-├── data/
-│   ├── raw/tech_ipos_curated.csv              # 87 IPO metadata
-│   └── processed/stock_prices_ipo_adjusted.csv # 17,802 obs
-├── src/                                       # Reusable modules
-│   ├── data_loader.py
-│   ├── estimators.py                          # TWFE, event study
-│   └── modern_did.py                          # Goodman-Bacon, Callaway-Sant'Anna
-├── tests/
-│   └── test_estimators.py
-├── notebooks/
-│   ├── 01_data_collection.ipynb
-│   ├── 02_did_analysis.ipynb                  # Main results
-│   ├── 03_robustness.ipynb                    # Placebo tests, heterogeneity
-│   └── 04_advanced_analysis.ipynb             # Modern DiD methods
-└── outputs/
-    ├── figures/
-    └── results/
-```
-
----
-
-## Quick Start
+## Run It
 
 ```bash
-# Setup
-git clone <repo-url>
-cd ipo-lockup-did-analysis
-python -m venv venv
-source venv/bin/activate
 pip install -r requirements.txt
-
-# Option 1: CLI (fastest)
 python run_analysis.py --quick
-# Output: Effect: +0.4545% (p=0.0004)
-
-# Option 2: Python API
-python -c "
-from src.data_loader import IPODataLoader
-from src.estimators import TWFEEstimator
-
-loader = IPODataLoader()
-lockup_panel = loader.load_stock_data()
-result = TWFEEstimator().estimate(lockup_panel)
-print(f'Effect: {result.coefficient:.4f}% (p={result.p_value:.4f})')
-"
-
-# Option 3: Jupyter notebooks
-jupyter notebook
-# Run 01 → 02 → 03 → 04 in order
 ```
 
-See [QUICKSTART.md](QUICKSTART.md) for details.
-
-### CLI Usage
+Or run the notebooks in order:
 
 ```bash
-python run_analysis.py                  # Full analysis
-python run_analysis.py --quick          # TWFE only
-python run_analysis.py --ticker SNOW    # Single IPO
+jupyter notebook notebooks/01_data_collection.ipynb
+jupyter notebook notebooks/02_did_analysis.ipynb
+jupyter notebook notebooks/03_robustness.ipynb
+jupyter notebook notebooks/04_advanced_analysis.ipynb
 ```
 
----
+## Repo Map
 
-## Technical Details
-
-### Why TWFE Might Be Biased Here
-
-In staggered DiD, TWFE implicitly uses already-treated units as controls for late-treated units. If treatment effects evolve over time (e.g., early 2020 IPO lockups different from late 2021), this creates bias.
-
-**Goodman-Bacon decomposition** shows 50% of TWFE weight comes from "problematic" comparisons (later-treated vs earlier-treated as control).
-
-**Modern estimators** (Callaway-Sant'Anna, Sun-Abraham) fix this by:
-1. Never using already-treated units as controls
-2. Estimating group-time specific ATTs
-3. Aggregating with appropriate weights
-
-**Result**: C-S gives +0.43% vs TWFE +0.45% → bias appears minimal here.
-
-### Parallel Trends Test
-
-Pre-treatment period (Days -30 to -1):
-```python
-from scipy.stats import linregress
-linregress(days_to_lockup, abnormal_return)
-# Slope: -0.011% per day, p=0.43 → No significant trend
+```text
+ipo-lockup-did-analysis/
+├── data/
+├── notebooks/
+├── outputs/
+├── run_analysis.py
+├── src/
+│   ├── data_loader.py
+│   ├── estimators.py
+│   └── modern_did.py
+└── tests/
 ```
 
-However, visual inspection shows some noise. Combined with placebo test failures, parallel trends assumption is questionable.
+## Limits
 
-### Sample Attrition
-
-16 IPOs (18%) dropped:
-- 5 delisted before Day 180
-- 4 acquired before Day 180
-- 7 data unavailable
-
-**Survivorship concern**: Sample only includes IPOs that *survived* to lockup. Survivorship itself may drive the positive effect (making it to Day 180 = good news).
-
-Can't test this without data on failed IPOs.
-
----
-
-## Known Issues / Future Work
-
-- [ ] Placebo tests partially fail (3 out of 6 fake dates show significance) - suggests identification might be weak, need to think through this more
-- [ ] Sample is tech-only - would love to add healthcare, industrials, consumer goods but manual data collection takes forever
-- [ ] No actual insider selling data (need to scrape SEC Form 4, which is a pain - see `notebooks/scratch/trying_to_scrape_form4.py`)
-- [ ] Test coverage incomplete (~40% - see TODOs in test files)
-- [ ] Some notebook cells take 30+ seconds to run (linearmodels with time FE is slow)
-- [ ] Volume-weighted DiD doesn't work well (tried it, large IPOs dominate - see `notebooks/scratch/`)
-- [ ] Sector heterogeneity analysis incomplete (too few IPOs per sector)
-
-Pull requests welcome! Or just open an issue if you find bugs.
-
----
-
-## References
-
-**Modern DiD Methods**:
-- Goodman-Bacon (2021). *Journal of Econometrics*, 225(2), 254-277.
-- Callaway & Sant'Anna (2021). *Journal of Econometrics*, 225(2), 200-230.
-- TODO: cite that Roth et al paper on pre-trends (2023 or 2024? can't remember)
-
-**IPO Lockups**:
-- Field & Hanka (2001). *Journal of Finance*, 56(2), 471-500.
-- Brav & Gompers (2003). *Journal of Financial Economics*, 68(3), 413-437.
-
-**Econometrics**:
-- Angrist & Pischke (2009). *Mostly Harmless Econometrics*. Princeton.
-- Cunningham (2021). *Causal Inference: The Mixtape*. Yale.
-
----
-
-## Contact
-
-**Author**: Tomasz Solis
-**GitHub**: [github.com/tomasz-solis](https://github.com/tomasz-solis)
-**LinkedIn**: [linkedin.com/in/tomaszsolis](https://www.linkedin.com/in/tomaszsolis/)
-
----
-
-## License
-
-MIT License
+This is tech-only and covers an unusual market period: COVID, QE, rate hikes, and a
+large tech drawdown. It also lacks observed insider selling volume, which is the
+mechanism a lockup thesis actually needs. The safest claim is narrow: in this sample,
+Day 180 does not behave like a clean, exploitable lockup-crash event.
